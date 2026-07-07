@@ -15,7 +15,11 @@ app.include_router(reviews_router)
 
 @app.get("/")
 def health_check():
-    return {"message": "✓ API is healthy and ready", "status": "operational"}
+    return {
+        "message": "✓ API is healthy and ready",
+        "status": "operational",
+        "timestamp": datetime.now().isoformat(),
+    }
 
 
 @app.get("/command-center", response_class=HTMLResponse)
