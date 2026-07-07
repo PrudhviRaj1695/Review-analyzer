@@ -133,5 +133,73 @@ dmypy.json
 .DS_Store
 Thumbs.db
 
+# Streamlit specific
+.streamlit/
+.streamlit/secrets.toml
+.streamlit/config.toml
+streamlit_cache/
+
+# FastAPI / Uvicorn
+*.db
+*.sqlite
+*.sqlite3
+*.log
+
+# UV package manager
+uv.lock.bak
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+instance/
+
+# Build artifacts
+*.whl
+build/
+dist/
+*.tar.gz
+
+# Environment files
+.env
+.env.local
+.env.*.local
+*.env
+
+# Secrets and credentials
+secrets.json
+*.pem
+*.key
+.aws/
+.ssh/
+
+# Node/npm (if using for frontend)
+node_modules/
+npm-debug.log
+yarn-error.log
+package-lock.json
+
+# Docker
+.docker/
+docker-compose.override.yml
+
+# VS Code workspace
+*.code-workspace
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# Lint/Format
+.ruff_cache/
+
 # Project specific
 .pre-commit/
+.claude/
+CLAUDE.md
