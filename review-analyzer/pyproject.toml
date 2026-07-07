@@ -1,0 +1,18 @@
+[project]
+name = "review-analyzer"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "fastapi>=0.139.0",
+    "httpx2>=2.5.0",
+    "uvicorn>=0.50.0",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=9.1.1",
+    "pytest-randomly>=4.1.0",
+    "ruff>=0.15.20",
+]
