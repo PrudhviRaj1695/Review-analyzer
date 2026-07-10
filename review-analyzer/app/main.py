@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from fastapi.responses import HTMLResponse
+from contextlib import asynccontextmanager
 
 from datetime import datetime
 import asyncio
@@ -8,7 +9,17 @@ import time
 from app.routers.products import router as products_router
 from app.routers.reviews import router as reviews_router
 
-app = FastAPI()
+
+@asynccontextmanager
+async def lifespan(_: FastAPI):
+    """App startup and shutdown events."""
+    # Database migrations are now managed by Alembic
+    # Run 'alembic upgrade head' before starting the app
+    yield
+    # Shutdown (cleanup if needed)
+
+
+app = FastAPI(lifespan=lifespan)
 app.include_router(products_router)
 app.include_router(reviews_router)
 
