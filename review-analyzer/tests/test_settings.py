@@ -1,4 +1,7 @@
 """Test that settings load correctly from environment."""
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 def test_settings_load_from_env():
@@ -11,7 +14,7 @@ def test_settings_load_from_env():
     # Verify LLM_API_KEY is loaded
     assert settings.llm_api_key is not None, "LLM_API_KEY should be loaded from .env"
     assert len(settings.llm_api_key) > 0, "LLM_API_KEY should not be empty"
-    print(f"[OK] LLM_API_KEY loaded: {settings.llm_api_key[:20]}...")
+    logger.info("[OK] LLM_API_KEY loaded: %s...", settings.llm_api_key[:20])
 
 
 def test_settings_have_required_fields():
@@ -25,9 +28,9 @@ def test_settings_have_required_fields():
     assert hasattr(settings, "llm_provider"), "Should have llm_provider field"
     assert hasattr(settings, "llm_model"), "Should have llm_model field"
 
-    print("[OK] All settings fields present")
-    print(f"     Provider: {settings.llm_provider}")
-    print(f"     Model: {settings.llm_model}")
+    logger.info("[OK] All settings fields present")
+    logger.info("     Provider: %s", settings.llm_provider)
+    logger.info("     Model: %s", settings.llm_model)
 
 
 def test_settings_use_env_file():
@@ -35,11 +38,27 @@ def test_settings_use_env_file():
     from app.settings import Settings
 
     settings = Settings()
-    # The test .env has this specific key format
-    assert "sk_test" in settings.llm_api_key or settings.llm_api_key.startswith(
-        "sk_"
-    ), "Should load key from .env file"
-    print("[OK] Settings loaded from .env file")
+    # Confirms this came from .env, not a fallback default (Settings has no default
+    # for llm_api_key, so an unset .env would fail validation before reaching here).
+    assert settings.llm_api_key == "ollama", "Should load key from .env file"
+    logger.info("[OK] Settings loaded from .env file")
+
+
+def test_llm_timeout_and_retry_defaults():
+    """Verify hard timeout and retry-count settings exist with sane defaults."""
+    from app.settings import Settings
+
+    settings = Settings()
+
+    assert settings.llm_timeout_seconds > 0, "Timeout should be a positive number"
+    assert (
+        settings.llm_max_retries >= 1
+    ), "Should retry at least once on transient errors"
+    logger.info(
+        "[OK] timeout=%ss max_retries=%s",
+        settings.llm_timeout_seconds,
+        settings.llm_max_retries,
+    )
 
 
 def test_env_file_not_in_git():
@@ -52,4 +71,4 @@ def test_env_file_not_in_git():
         gitignore_content = f.read()
 
     assert ".env" in gitignore_content, ".env should be in .gitignore"
-    print("[OK] .env is in .gitignore")
+    logger.info("[OK] .env is in .gitignore")

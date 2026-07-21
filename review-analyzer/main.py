@@ -1,5 +1,14 @@
+import logging
+
+from app.logging_config import configure_logging
+
+configure_logging()
+
+logger = logging.getLogger(__name__)
+
+
 def main():
-    print("Hello from review-analyzer!")
+    logger.info("Hello from review-analyzer!")
 
 
 if __name__ == "__main__":

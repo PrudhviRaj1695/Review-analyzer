@@ -1,6 +1,10 @@
 """Initialize database tables from ORM models."""
+import logging
+
 from app.database import engine
 from app.models import Base
+
+logger = logging.getLogger(__name__)
 
 
 def init_db():
@@ -14,10 +18,10 @@ def init_db():
     """
     try:
         Base.metadata.create_all(bind=engine)
-        print("✓ Database tables initialized")
+        logger.info("Database tables initialized")
     except Exception as e:
         # Fail silently - could be in test environment with different database
-        print(f"⚠ Database initialization skipped: {type(e).__name__}")
+        logger.warning("Database initialization skipped: %s", type(e).__name__)
 
 
 if __name__ == "__main__":

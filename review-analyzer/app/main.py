@@ -1,13 +1,17 @@
+import asyncio
+import logging
+import time
+from contextlib import asynccontextmanager
+from datetime import datetime
+
 from fastapi import FastAPI
 from fastapi.responses import HTMLResponse
-from contextlib import asynccontextmanager
 
-from datetime import datetime
-import asyncio
-import time
-
+from app.routers.compare import router as compare_router
 from app.routers.products import router as products_router
 from app.routers.reviews import router as reviews_router
+
+logger = logging.getLogger(__name__)
 
 
 @asynccontextmanager
@@ -22,6 +26,7 @@ async def lifespan(_: FastAPI):
 app = FastAPI(lifespan=lifespan)
 app.include_router(products_router)
 app.include_router(reviews_router)
+app.include_router(compare_router)
 
 
 @app.get("/")
@@ -50,15 +55,15 @@ def command_center():
 
 @app.get("/demo-blocking")
 def demo_blocking():
-    print("blocking start", datetime.now().isoformat())
+    logger.info("blocking start at %s", datetime.now().isoformat())
     time.sleep(3)
-    print("blocking end", datetime.now().isoformat())
+    logger.info("blocking end at %s", datetime.now().isoformat())
     return {"message": "blocking complete"}
 
 
 @app.get("/demo-async")
 async def demo_async():
-    print("async start", datetime.now().isoformat())
+    logger.info("async start at %s", datetime.now().isoformat())
     await asyncio.sleep(3)
-    print("async end", datetime.now().isoformat())
+    logger.info("async end at %s", datetime.now().isoformat())
     return {"message": "async complete"}

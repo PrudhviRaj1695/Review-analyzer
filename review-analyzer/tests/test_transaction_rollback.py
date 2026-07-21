@@ -4,9 +4,13 @@ Test transaction rollback behavior: all-or-nothing writes.
 Demonstrates that when an error occurs mid-transaction, the entire
 transaction is rolled back, leaving no partial data written to the database.
 """
+import logging
+
 import pytest
 from sqlalchemy.exc import IntegrityError
 from app.models import Product, Review
+
+logger = logging.getLogger(__name__)
 
 
 def test_transaction_rollback_on_foreign_key_violation(db):
@@ -34,12 +38,12 @@ def test_transaction_rollback_on_foreign_key_violation(db):
         product = Product(name="Test Product", price=99.99, rating=4.5)
         db.add(product)
         db.flush()  # Push to database, but don't commit yet
-        print(f"[OK] Product added to transaction (ID will be: {product.id})")
+        logger.info("[OK] Product added to transaction (ID will be: %s)", product.id)
 
         # Verify the product exists within the transaction
         tx_product_count = db.query(Product).count()
         assert tx_product_count == 1, "Product should exist in open transaction"
-        print(f"     Within transaction: {tx_product_count} product(s) exist")
+        logger.info("     Within transaction: %s product(s) exist", tx_product_count)
 
         # Write 2: Try to create a review with INVALID product_id
         # This should fail because product_id=9999 doesn't exist
@@ -52,20 +56,20 @@ def test_transaction_rollback_on_foreign_key_violation(db):
 
     except IntegrityError as e:
         # Error occurred mid-transaction
-        print(f"[ERROR] Error caught (as expected): {type(e).__name__}")
-        print("        Foreign key constraint violation")
+        logger.error("[ERROR] Error caught (as expected): %s", type(e).__name__)
+        logger.error("        Foreign key constraint violation")
 
         # Rollback the entire transaction
         db.rollback()
-        print("        Transaction rolled back")
+        logger.error("        Transaction rolled back")
 
     # After rollback: verify NO data was written
     final_product_count = db.query(Product).count()
     final_review_count = db.query(Review).count()
 
-    print("\nAfter rollback:")
-    print(f"  Products: {final_product_count} (should be 0)")
-    print(f"  Reviews: {final_review_count} (should be 0)")
+    logger.info("\nAfter rollback:")
+    logger.info("  Products: %s (should be 0)", final_product_count)
+    logger.info("  Reviews: %s (should be 0)", final_review_count)
 
     assert (
         final_product_count == 0
@@ -94,13 +98,13 @@ def test_transaction_commit_requires_all_operations_valid(db):
         db.add(review)
         db.flush()
 
-        print("[OK] Both operations valid")
-        print(f"     Product ID: {product.id}")
-        print(f"     Review references product {review.product_id}")
+        logger.info("[OK] Both operations valid")
+        logger.info("     Product ID: %s", product.id)
+        logger.info("     Review references product %s", review.product_id)
 
         # Commit succeeds
         db.commit()
-        print("     Transaction committed")
+        logger.info("     Transaction committed")
 
     except IntegrityError:
         db.rollback()
@@ -110,9 +114,9 @@ def test_transaction_commit_requires_all_operations_valid(db):
     final_product_count = db.query(Product).count()
     final_review_count = db.query(Review).count()
 
-    print("\nAfter commit:")
-    print(f"  Products: {final_product_count} (should be 1)")
-    print(f"  Reviews: {final_review_count} (should be 1)")
+    logger.info("\nAfter commit:")
+    logger.info("  Products: %s (should be 1)", final_product_count)
+    logger.info("  Reviews: %s (should be 1)", final_review_count)
 
     assert final_product_count == 1, "Product should persist after commit"
     assert final_review_count == 1, "Review should persist after commit"
@@ -134,17 +138,17 @@ def test_multiple_products_with_one_failure_rolls_back_all(db):
             db.add(p)
             db.flush()
             products.append(p)
-            print(f"[OK] Added Product {i} (ID: {p.id})")
+            logger.info("[OK] Added Product %s (ID: %s)", i, p.id)
 
         # Add reviews for products 1 and 2 (valid)
         for i in range(2):
             r = Review(product_id=products[i].id, text=f"Review for product {i+1}")
             db.add(r)
             db.flush()
-            print(f"[OK] Added review for Product {i+1}")
+            logger.info("[OK] Added review for Product %s", i + 1)
 
         # Try to add review for product with invalid ID (fail on 3rd review)
-        print("[FAIL] Attempting review with invalid product_id...")
+        logger.warning("[FAIL] Attempting review with invalid product_id...")
         bad_review = Review(product_id=9999, text="This will fail")
         db.add(bad_review)
         db.flush()  # Raises IntegrityError
@@ -152,17 +156,17 @@ def test_multiple_products_with_one_failure_rolls_back_all(db):
         pytest.fail("Expected error not raised")
 
     except IntegrityError:
-        print("       IntegrityError raised as expected")
+        logger.info("       IntegrityError raised as expected")
         db.rollback()
-        print("       Entire transaction rolled back")
+        logger.info("       Entire transaction rolled back")
 
     # After rollback: ALL writes are undone
     final_product_count = db.query(Product).count()
     final_review_count = db.query(Review).count()
 
-    print("\nAfter rollback:")
-    print(f"  Products: {final_product_count} (should be 0, not 3)")
-    print(f"  Reviews: {final_review_count} (should be 0, not 2)")
+    logger.info("\nAfter rollback:")
+    logger.info("  Products: %s (should be 0, not 3)", final_product_count)
+    logger.info("  Reviews: %s (should be 0, not 2)", final_review_count)
 
     assert (
         final_product_count == 0
@@ -170,4 +174,4 @@ def test_multiple_products_with_one_failure_rolls_back_all(db):
     assert (
         final_review_count == 0
     ), "No reviews should exist after rollback (all 2 undone)"
-    print("\n[OK] Atomic: all writes rolled back together, none left behind")
+    logger.info("\n[OK] Atomic: all writes rolled back together, none left behind")

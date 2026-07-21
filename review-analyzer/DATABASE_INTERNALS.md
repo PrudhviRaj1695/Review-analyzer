@@ -92,32 +92,36 @@ db.close()                   # End transaction
 
 #### A. Identity Map (Session tracks objects)
 ```python
+logger = logging.getLogger(__name__)
+
 # First query
 product1 = db.query(Product).get(1)
-print(product1.name)  # "Laptop"
+logger.info("%s", product1.name)  # "Laptop"
 
 # Same query again
 product2 = db.query(Product).get(1)
-print(product2 is product1)  # True! Not a new object
+logger.info("%s", product2 is product1)  # True! Not a new object
 # ↑ Session remembers it already loaded this
 
 # Change it
 product1.name = "Gaming Laptop"
-print(product2.name)  # "Gaming Laptop" 
+logger.info("%s", product2.name)  # "Gaming Laptop" 
 # ↑ Both variables point to same object in memory
 ```
 
 #### B. Lazy Loading (Load on demand)
 ```python
+logger = logging.getLogger(__name__)
+
 # Session loads only what you ask for
 product = db.query(Product).get(1)
 # At this point: Product #1 is loaded
-print(product.name)  # "Laptop"
+logger.info("%s", product.name)  # "Laptop"
 
 # But reviews aren't loaded yet!
 # Only when you access them:
 for review in product.reviews:  # NOW it queries reviews table
-    print(review.text)
+    logger.info("%s", review.text)
 ```
 
 #### C. Change Tracking
