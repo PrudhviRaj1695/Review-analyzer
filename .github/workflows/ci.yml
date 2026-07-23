@@ -6,7 +6,7 @@ on:
 
 jobs:
   install:
-    name: Install & lint
+    name: Install, lint & test
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -28,3 +28,11 @@ jobs:
 
       - name: Format check (ruff format --check)
         run: uv run ruff format --check .
+
+      # No Postgres service container: the test suite runs entirely against
+      # an in-memory SQLite fixture (tests/conftest.py) via FastAPI dependency
+      # injection, including the pgvector-typed embedding column. No test
+      # today exercises real Postgres-specific SQL. A `postgres` pytest
+      # marker is registered in pyproject.toml for when that changes.
+      - name: Run tests (pytest)
+        run: uv run pytest -v
