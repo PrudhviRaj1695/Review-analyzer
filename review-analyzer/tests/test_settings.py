@@ -1,8 +1,13 @@
 """Test that settings load correctly from environment."""
 
 import logging
+from pathlib import Path
+
+import pytest
 
 logger = logging.getLogger(__name__)
+
+_ENV_FILE = Path(__file__).parent.parent / ".env"
 
 
 def test_settings_load_from_env():
@@ -34,6 +39,11 @@ def test_settings_have_required_fields():
     logger.info("     Model: %s", settings.llm_model)
 
 
+@pytest.mark.skipif(
+    not _ENV_FILE.exists(),
+    reason=".env is gitignored and doesn't exist in CI -- this test only verifies "
+    "local .env loading, not app behavior",
+)
 def test_settings_use_env_file():
     """Verify that .env file is being used."""
     from app.settings import Settings
