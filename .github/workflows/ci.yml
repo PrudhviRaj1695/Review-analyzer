@@ -45,3 +45,16 @@ jobs:
           DATABASE_URL: "sqlite:///:memory:"
           LLM_API_KEY: "test-placeholder"
         run: uv run pytest -v
+
+  docker-build:
+    name: Docker build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      # Build only -- no registry login, no push. Deploy (Azure) is a
+      # separate, later stage; this job exists purely to catch a broken
+      # Dockerfile/build before anything downstream depends on it.
+      - name: Build image
+        run: docker build -t review-analyzer:${{ github.sha }} ./review-analyzer
