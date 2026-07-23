@@ -6,7 +6,7 @@ on:
 
 jobs:
   install:
-    name: Install dependencies
+    name: Install & lint
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -22,3 +22,9 @@ jobs:
 
       - name: Install dependencies
         run: uv sync --locked
+
+      - name: Lint (ruff check)
+        run: uv run ruff check .
+
+      - name: Format check (ruff format --check)
+        run: uv run ruff format --check .
