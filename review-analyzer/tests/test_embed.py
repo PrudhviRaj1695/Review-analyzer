@@ -1,4 +1,5 @@
 """Unit tests for app.embed: embedding shape and cosine similarity ranking."""
+
 from app.embed import cosine_similarity, embed_texts, retrieve_relevant_reviews
 from app.models import Review
 

@@ -237,7 +237,7 @@ def test_product_includes_review_count(client):
     for i in range(3):
         review_data = {
             "product_id": 1,
-            "text": f"Review #{i+1}: Great product!",
+            "text": f"Review #{i + 1}: Great product!",
         }
         response = client.post("/products/reviews/create", json=review_data)
         assert response.status_code == 201

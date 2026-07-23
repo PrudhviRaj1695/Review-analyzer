@@ -1,4 +1,5 @@
 """Pytest configuration and fixtures for database testing."""
+
 import sys
 from pathlib import Path
 

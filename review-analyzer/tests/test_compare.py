@@ -1,5 +1,6 @@
 """Verify /compare turns LLM provider failures into a clean 503, not a raw 500,
 and that it grounds recommendations in retrieved reviews only."""
+
 import json
 
 import httpx

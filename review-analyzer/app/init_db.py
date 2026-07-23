@@ -1,4 +1,5 @@
 """Initialize database tables from ORM models."""
+
 import logging
 
 from app.database import engine

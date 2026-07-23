@@ -1,4 +1,5 @@
 """Embed review text and compare vectors for similarity search (RAG retrieval step)."""
+
 import math
 
 from app.models import Review

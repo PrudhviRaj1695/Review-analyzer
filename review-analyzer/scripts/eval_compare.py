@@ -4,6 +4,7 @@ Seeds 4 products with distinct review content in an isolated in-memory DB, embed
 via the configured LLM, then runs get_recommendation() for each query and checks the
 winner against expectation. Prints a hits/misses table.
 """
+
 import logging
 import sys
 from pathlib import Path

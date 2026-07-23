@@ -1,4 +1,5 @@
 """Test that settings load correctly from environment."""
+
 import logging
 
 logger = logging.getLogger(__name__)
@@ -51,9 +52,9 @@ def test_llm_timeout_and_retry_defaults():
     settings = Settings()
 
     assert settings.llm_timeout_seconds > 0, "Timeout should be a positive number"
-    assert (
-        settings.llm_max_retries >= 1
-    ), "Should retry at least once on transient errors"
+    assert settings.llm_max_retries >= 1, (
+        "Should retry at least once on transient errors"
+    )
     logger.info(
         "[OK] timeout=%ss max_retries=%s",
         settings.llm_timeout_seconds,

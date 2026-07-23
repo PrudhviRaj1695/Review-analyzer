@@ -4,6 +4,7 @@ Test transaction rollback behavior: all-or-nothing writes.
 Demonstrates that when an error occurs mid-transaction, the entire
 transaction is rolled back, leaving no partial data written to the database.
 """
+
 import logging
 
 import pytest
@@ -71,12 +72,12 @@ def test_transaction_rollback_on_foreign_key_violation(db):
     logger.info("  Products: %s (should be 0)", final_product_count)
     logger.info("  Reviews: %s (should be 0)", final_review_count)
 
-    assert (
-        final_product_count == 0
-    ), "Product should NOT exist after rollback (all-or-nothing)"
-    assert (
-        final_review_count == 0
-    ), "Review should NOT exist after rollback (all-or-nothing)"
+    assert final_product_count == 0, (
+        "Product should NOT exist after rollback (all-or-nothing)"
+    )
+    assert final_review_count == 0, (
+        "Review should NOT exist after rollback (all-or-nothing)"
+    )
 
 
 def test_transaction_commit_requires_all_operations_valid(db):
@@ -142,7 +143,7 @@ def test_multiple_products_with_one_failure_rolls_back_all(db):
 
         # Add reviews for products 1 and 2 (valid)
         for i in range(2):
-            r = Review(product_id=products[i].id, text=f"Review for product {i+1}")
+            r = Review(product_id=products[i].id, text=f"Review for product {i + 1}")
             db.add(r)
             db.flush()
             logger.info("[OK] Added review for Product %s", i + 1)
@@ -168,10 +169,10 @@ def test_multiple_products_with_one_failure_rolls_back_all(db):
     logger.info("  Products: %s (should be 0, not 3)", final_product_count)
     logger.info("  Reviews: %s (should be 0, not 2)", final_review_count)
 
-    assert (
-        final_product_count == 0
-    ), "No products should exist after rollback (all 3 undone)"
-    assert (
-        final_review_count == 0
-    ), "No reviews should exist after rollback (all 2 undone)"
+    assert final_product_count == 0, (
+        "No products should exist after rollback (all 3 undone)"
+    )
+    assert final_review_count == 0, (
+        "No reviews should exist after rollback (all 2 undone)"
+    )
     logger.info("\n[OK] Atomic: all writes rolled back together, none left behind")

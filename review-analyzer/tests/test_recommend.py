@@ -1,4 +1,5 @@
 """Verify the LLM client has a hard timeout and retries only transient failures."""
+
 import logging
 
 import httpx

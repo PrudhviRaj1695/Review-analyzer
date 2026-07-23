@@ -1,4 +1,5 @@
 """Application settings loaded from environment variables."""
+
 from pathlib import Path
 
 from pydantic import Field
