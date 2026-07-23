@@ -1,11 +1,17 @@
 """Verify the LLM client has a hard timeout and retries only transient failures."""
 
+import json
 import logging
 
 import httpx
 
 from app.models import Product, Review
-from app.recommend import build_context, build_prompt, estimate_cost_usd
+from app.recommend import (
+    build_context,
+    build_prompt,
+    estimate_cost_usd,
+    get_recommendation,
+)
 from app.settings import settings
 
 logger = logging.getLogger(__name__)
@@ -91,6 +97,47 @@ def test_build_context_enforces_max_size(monkeypatch):
 
     assert len(context) == 50 + len("\n...[truncated]")
     assert context.endswith("\n...[truncated]")
+
+
+def test_get_recommendation_warns_when_llm_call_is_slow(monkeypatch, caplog):
+    """A WARNING is logged when a single LLM call exceeds llm_slow_call_seconds."""
+    monkeypatch.setattr(settings, "llm_slow_call_seconds", 0)
+
+    class FakeMessage:
+        content = json.dumps(
+            {
+                "recommended_product": "Widget",
+                "reason": "x",
+                "main_positive": "x",
+                "main_complaint": "none",
+                "confidence": 0.5,
+            }
+        )
+
+    class FakeCompletions:
+        def create(self, **kwargs):
+            class Choice:
+                message = FakeMessage()
+
+            class Response:
+                choices = [Choice()]
+                usage = None
+
+            return Response()
+
+    class FakeChat:
+        completions = FakeCompletions()
+
+    class FakeClient:
+        chat = FakeChat()
+
+    monkeypatch.setattr("app.recommend.OpenAI", lambda **kwargs: FakeClient())
+
+    product = Product(id=1, name="Widget", price=9.99, rating=4.5)
+    with caplog.at_level(logging.WARNING, logger="app.recommend"):
+        get_recommendation([product], "durable", {1: []})
+
+    assert any("slow" in record.message.lower() for record in caplog.records)
 
 
 def test_build_prompt_forbids_outside_knowledge():

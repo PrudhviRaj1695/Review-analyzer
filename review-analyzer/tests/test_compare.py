@@ -2,6 +2,7 @@
 and that it grounds recommendations in retrieved reviews only."""
 
 import json
+import logging
 
 import httpx
 import openai
@@ -134,3 +135,73 @@ def test_compare_sends_only_retrieved_reviews_to_the_llm(client, db, monkeypatch
     user_prompt = captured["user_prompt"]
     assert "Great grip in mud" in user_prompt
     assert "Battery life is disappointing" not in user_prompt
+
+
+def test_request_id_shared_across_logs_for_one_compare_call(
+    client, db, monkeypatch, caplog
+):
+    """X-Request-ID is returned on the response, and every log line emitted while
+    handling that /compare call (from multiple loggers) carries the same id."""
+    product_id = _seed_product(db)
+
+    class FakeEmbeddings:
+        def create(self, **kwargs):
+            class Item:
+                embedding = [1.0, 0.0]
+
+            class Response:
+                data = [Item()]
+
+            return Response()
+
+    class FakeMessage:
+        content = json.dumps(
+            {
+                "recommended_product": "Test Widget",
+                "reason": "Good grip",
+                "main_positive": "Grip",
+                "main_complaint": "none",
+                "confidence": 0.9,
+            }
+        )
+
+    class FakeUsage:
+        prompt_tokens = 100
+        completion_tokens = 50
+        total_tokens = 150
+
+    class FakeCompletions:
+        def create(self, **kwargs):
+            class Choice:
+                message = FakeMessage()
+
+            class Response:
+                choices = [Choice()]
+                usage = FakeUsage()
+
+            return Response()
+
+    class FakeChat:
+        completions = FakeCompletions()
+
+    class FakeClient:
+        chat = FakeChat()
+        embeddings = FakeEmbeddings()
+
+    monkeypatch.setattr("app.recommend.OpenAI", lambda **kwargs: FakeClient())
+
+    with caplog.at_level(logging.INFO):
+        response = client.post(
+            "/compare",
+            json={"product_ids": [product_id], "requirement": "durable and cheap"},
+        )
+
+    assert response.status_code == 200
+    request_id = response.headers.get("X-Request-ID")
+    assert request_id
+
+    tagged_records = [r for r in caplog.records if getattr(r, "request_id", None)]
+    # Expect log lines from at least two different loggers (app.main's request
+    # summary, app.recommend's LLM usage line) all sharing the same request_id.
+    assert {r.name for r in tagged_records} >= {"app.main", "app.recommend"}
+    assert all(r.request_id == request_id for r in tagged_records)

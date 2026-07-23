@@ -1,10 +1,14 @@
+import logging
+from typing import Annotated
+
 from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel, Field
-from typing import Annotated
 from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.models import Product as ProductModel, Review as ReviewModel
+
+logger = logging.getLogger(__name__)
 
 
 class ReviewsIn(BaseModel):
@@ -92,6 +96,7 @@ def create_product(product: ProductIn, db: Session = Depends(get_db)):
     db.add(db_product)
     db.commit()
     db.refresh(db_product)
+    logger.info("Product created: id=%s name=%s", db_product.id, db_product.name)
 
     return {"message": "Product review added successfully!"}
 

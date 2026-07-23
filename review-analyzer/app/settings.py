@@ -54,6 +54,14 @@ class Settings(BaseSettings):
         default=5,
         description="Number of most-relevant reviews retrieved per product for /compare",
     )
+    llm_slow_call_seconds: float = Field(
+        default=5.0,
+        description="Log a WARNING when a single LLM call takes longer than this, in seconds",
+    )
+    http_slow_request_seconds: float = Field(
+        default=1.0,
+        description="Log a WARNING when a request takes longer than this, in seconds",
+    )
 
 
 def get_settings() -> Settings:
