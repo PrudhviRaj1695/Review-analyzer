@@ -6,7 +6,7 @@ readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
     "fastapi>=0.139.0",
-    "httpx2>=2.5.0",
+    "httpx>=0.28.1",
     "uvicorn>=0.50.0",
     "sqlalchemy>=2.0.0",
     "psycopg2-binary>=2.9.0",
@@ -15,6 +15,7 @@ dependencies = [
     "alembic>=1.13.0",
     "openai>=2.45.0",
     "pgvector>=0.5.0",
+    "streamlit>=1.59.2",
 ]
 
 [dependency-groups]
@@ -22,4 +23,10 @@ dev = [
     "pytest>=9.1.1",
     "pytest-randomly>=4.1.0",
     "ruff>=0.15.20",
+]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+markers = [
+    "postgres: needs a real Postgres+pgvector connection, not covered by the SQLite test fixture",
 ]

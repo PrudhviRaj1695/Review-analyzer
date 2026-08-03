@@ -1,6 +1,4 @@
 """Pytest configuration and fixtures for database testing."""
-import sys
-from pathlib import Path
 
 import pytest
 from sqlalchemy import create_engine, event
@@ -11,10 +9,6 @@ from fastapi.testclient import TestClient
 from app.database import get_db
 from app.main import app
 from app.models import Base
-
-# Add project root to Python path
-sys.path.insert(0, str(Path(__file__).parent.parent))
-
 
 # Use SQLite in-memory database for testing
 # StaticPool keeps the in-memory database alive for the entire session

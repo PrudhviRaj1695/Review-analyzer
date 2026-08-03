@@ -1,4 +1,5 @@
 """Unit tests for app.utils.clean_text and app.utils.chunk_text."""
+
 import string
 
 import pytest

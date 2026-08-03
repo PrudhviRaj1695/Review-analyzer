@@ -30,3 +30,22 @@ def test_configure_logging_uses_jsonish_formatter():
     assert '"level": "INFO"' in rendered
     assert '"logger": "demo.logger"' in rendered
     assert '"message": "hello world"' in rendered
+
+
+def test_log_level_env_var_flips_root_logger_level(monkeypatch):
+    """LOG_LEVEL=DEBUG (or unset -> INFO) controls the root logger's threshold."""
+    root_logger = logging.getLogger()
+
+    def reconfigure():
+        for handler in list(root_logger.handlers):
+            root_logger.removeHandler(handler)
+            handler.close()
+        configure_logging()
+
+    monkeypatch.setenv("LOG_LEVEL", "DEBUG")
+    reconfigure()
+    assert root_logger.level == logging.DEBUG
+
+    monkeypatch.delenv("LOG_LEVEL")
+    reconfigure()
+    assert root_logger.level == logging.INFO

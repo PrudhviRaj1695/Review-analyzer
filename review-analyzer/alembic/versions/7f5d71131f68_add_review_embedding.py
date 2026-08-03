@@ -5,6 +5,7 @@ Revises: 520463b5e478
 Create Date: 2026-07-14 00:00:00.000000
 
 """
+
 from typing import Sequence, Union
 
 from alembic import op
@@ -21,7 +22,8 @@ depends_on: Union[str, Sequence[str], None] = None
 
 def upgrade() -> None:
     """Upgrade schema."""
-    op.execute("CREATE EXTENSION IF NOT EXISTS vector")
+    if op.get_bind().dialect.name == "postgresql":
+        op.execute("CREATE EXTENSION IF NOT EXISTS vector")
     op.add_column("reviews", sa.Column("embedding", Vector(1536), nullable=True))
 
 

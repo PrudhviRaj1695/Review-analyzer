@@ -1,4 +1,5 @@
 """Standalone script: send one prompt to the configured LLM and inspect the response."""
+
 import logging
 import sys
 from pathlib import Path

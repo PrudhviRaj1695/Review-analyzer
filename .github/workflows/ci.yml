@@ -1,0 +1,60 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  install:
+    name: Install, lint & test
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: review-analyzer
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v9.0.0
+        with:
+          enable-cache: true
+
+      - name: Install dependencies
+        run: uv sync --locked
+
+      - name: Lint (ruff check)
+        run: uv run ruff check .
+
+      - name: Format check (ruff format --check)
+        run: uv run ruff format --check .
+
+      # No Postgres service container: the test suite runs entirely against
+      # an in-memory SQLite fixture (tests/conftest.py) via FastAPI dependency
+      # injection, including the pgvector-typed embedding column. No test
+      # today exercises real Postgres-specific SQL. A `postgres` pytest
+      # marker is registered in pyproject.toml for when that changes.
+      #
+      # DATABASE_URL / LLM_API_KEY: app/database.py and app/settings.py both
+      # read these at *import* time (module-level code), regardless of the
+      # test fixture overriding the actual DB engine used at runtime. Locally
+      # this is satisfied by .env (gitignored, never reaches CI) -- these are
+      # throwaway values that just need to exist, not be real credentials.
+      - name: Run tests (pytest)
+        env:
+          DATABASE_URL: "sqlite:///:memory:"
+          LLM_API_KEY: "test-placeholder"
+        run: uv run pytest -v
+
+  docker-build:
+    name: Docker build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      # Build only -- no registry login, no push. Deploy (Azure) is a
+      # separate, later stage; this job exists purely to catch a broken
+      # Dockerfile/build before anything downstream depends on it.
+      - name: Build image
+        run: docker build -t review-analyzer:${{ github.sha }} ./review-analyzer

@@ -1,6 +1,8 @@
 """Build LLM prompts and parse product recommendations from reviews."""
+
 import json
 import logging
+import time
 
 from openai import OpenAI
 from pydantic import BaseModel, Field, ValidationError
@@ -140,7 +142,9 @@ def get_recommendation(
     """Call the LLM and return a parsed recommendation, grounded only in reviews_by_product."""
     client = get_llm_client()
     system_prompt, user_prompt = build_prompt(products, requirement, reviews_by_product)
+    logger.debug("compare LLM prompt: system=%r user=%r", system_prompt, user_prompt)
 
+    start = time.perf_counter()
     response = client.chat.completions.create(
         model=settings.llm_model,
         messages=[
@@ -148,6 +152,15 @@ def get_recommendation(
             {"role": "user", "content": user_prompt},
         ],
     )
+    duration = time.perf_counter() - start
+    if duration > settings.llm_slow_call_seconds:
+        logger.warning(
+            "AI call slow: %.2fs (model=%s, threshold=%.2fs)",
+            duration,
+            settings.llm_model,
+            settings.llm_slow_call_seconds,
+        )
+
     raw_content = response.choices[0].message.content
 
     usage = response.usage
